@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Nova – STAN Chatbot Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { 
+      font-family: system-ui, Arial, sans-serif; 
+      background: #f5f7fa; 
+      display: flex; 
+      justify-content: center; 
+      padding: 20px;
+    }
+    .chat-container {
+      background: #fff;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #0a5;
+      color: white;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #log {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: #f9fafc;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin: 8px 0;
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      line-height: 1.4;
+      font-size: 15px;
+      display: inline-block;
+      white-space: pre-wrap;
+    }
+    .u {
+      background: #0a5;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .a {
+      background: #e5e7eb;
+      color: #222;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-footer {
+      display: flex;
+      padding: 12px;
+      border-top: 1px solid #ddd;
+      background: #fff;
+    }
+    textarea {
+      flex: 1;
+      resize: none;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+    button {
+      background: #0a5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #098b47;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-weight: bold;
+    }
+    .username-container {
+      display: flex;
+      align-items: center;
+    }
+    #userId {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+    }
+    .clear-btn {
+      margin-left: 8px;
+      padding: 0 8px;
+      background: #e53e3e;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    .clear-btn:hover {
+      background: #c53030;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">Nova – Conversational Chatbot</div>
+    
+    <div style="padding:12px;" class="username-container">
+      <input id="userId" placeholder="Enter your name"/>
+      <button class="clear-btn" onclick="clearUser()">❌</button>
+    </div>
+
+    <div id="log"></div>
+
+    <div class="chat-footer">
+      <textarea id="msg" rows="1" placeholder="Type a message..."></textarea>
+      <button onclick="send()">Send</button>
+    </div>
+  </div>
+
+<script>
+const log = document.getElementById('log');
+let lastUserId = ""; // Track last entered user
+
+function add(role, text) {
+  const div = document.createElement('div');
+  div.className = 'message ' + (role === 'user' ? 'u' : 'a');
+  div.innerHTML = text.replace(/\n/g, "<br>");
+  div.style.alignSelf = role === 'user' ? 'flex-end' : 'flex-start';
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function clearLog() {
+  log.innerHTML = "";
+}
+
+function clearUser() {
+  document.getElementById('userId').value = "";
+  lastUserId = "";
+  clearLog();
+}
+
+async function send() {
+  const userId = document.getElementById('userId').value.trim();
+  const message = document.getElementById('msg').value.trim();
+
+  // If username is empty, clear chat and return
+  if (!userId) {
+    clearLog();
+    lastUserId = "";
+    return;
+  }
+
+  // Clear chat if username changed
+  if (userId !== lastUserId) {
+    clearLog();
+    lastUserId = userId;
+  }
+
+  if (!message) return;
+
+  add('user', message);
+  document.getElementById('msg').value = '';
+
+  // Send to API for dynamic responses
+  const r = await fetch('/api/chat', {
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, message })
+  });
+  const data = await r.json();
+  add('assistant', data.reply);
+}
+</script>
+</body>
+</html>
